@@ -32,9 +32,9 @@ class Plot2D(object):
 
     def update(self):
         s = numpy.sin(2 * numpy.pi * self.t + self.phase)
-        c = numpy.cos(2 * numpy.pi * self.t + self.phase)
+        #c = numpy.cos(2 * numpy.pi * self.t + self.phase)
         self.trace("sin", self.t, s)
-        self.trace("cos", self.t, c)
+        #self.trace("cos", self.t, c)
         self.phase += 0.1
 
     def animation(self):
