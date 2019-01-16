@@ -34,10 +34,10 @@ class Screen(QtGui.QMainWindow):
 
         self.time = 5
 
-    def addDataToPlot(self):
+    def addDataToPlot(self, toPlot):
         data = {
             'x': self.time,
-            'y': 25
+            'y': toPlot
         }
         self.x = np.append(self.x, data['x'])
         self.y =np.append(self.y, data['y'])
@@ -47,5 +47,15 @@ class Screen(QtGui.QMainWindow):
 
 app = QtGui.QApplication(sys.argv)
 window = Screen()
-window.show()
-sys.exit(app.exec_())
+
+def update():
+    window.addDataToPlot(200)
+    print("hello there")
+
+
+
+
+if __name__ == "__main__":
+    
+    window.show()
+    sys.exit(app.exec_())
