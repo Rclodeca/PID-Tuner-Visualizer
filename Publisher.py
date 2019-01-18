@@ -14,16 +14,14 @@ def talker():
     pub = talker_node.create_publisher("chatter")
 
     seconds = 0.0
+    setPoint = 20
     
     x = np.linspace(-np.pi, np.pi, 201)
     s = np.sin(x)
 
     i = 0
-
     while(1):
-
-       
-        pub.publish(str(s[i]) + " " + str(seconds))
+        pub.publish(str(s[i]) + " " + str(seconds) + " " + str(setPoint))
 
         time.sleep(0.01)
         i += 1
@@ -31,6 +29,5 @@ def talker():
             i = 0
        
        
-
 if __name__ == "__main__":
     talker()

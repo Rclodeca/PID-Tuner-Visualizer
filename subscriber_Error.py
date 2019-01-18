@@ -1,6 +1,5 @@
 import mechos
 import time
-#import test2
 from pyqtgraph.Qt import QtGui, QtCore
 import sys 
 from PyQt4.QtGui import *
@@ -11,11 +10,7 @@ import numpy as np
 import threading
 
 
-
-print("started3")
-
 def listener():
-            print("started2")
             '''
             Example of a subsriber subscribing to topic "chatter"
             '''
@@ -33,7 +28,6 @@ def listener():
                 time.sleep(0.1)
 
 def chatter_callback(chatter_data):
-            print("chatter works")
             '''
             Callback function for subscriber to pass data into.
             Parameters:
@@ -41,22 +35,14 @@ def chatter_callback(chatter_data):
                 time a spinOnce is called, the data being sent from the publisher is
                 inserted here.
             '''
-            #print(chatter_data)
             tokens = chatter_data.split()
             error = float(tokens[0])
             seconds = tokens[1]
-            print(str(error) + ", " + str(seconds))
             window.signal.emit(error)
-
-
-    
-
-
 
 
 class Screen(QtGui.QMainWindow):
         signal = QtCore.Signal(float)
-
 
         def __init__(self):
             super(Screen, self).__init__()
@@ -67,8 +53,11 @@ class Screen(QtGui.QMainWindow):
             self.x = np.array([])
             self.y = np.array([])
             self.plt = pg.PlotWidget()
+            self.plt.setTitle("Error vs. Time")
+            self.plt.setLabel('left', "Error")
+            self.plt.setLabel('bottom', "Time(s)")
             self.plot = self.plt.plot(self.x, self.y)
-            self.plt.addItem(pg.InfiniteLine(pos=2, angle=0, label='Setpoint'))
+            self.plt.addItem(pg.InfiniteLine(pos=0, angle=0))
 
             addBtn = QtGui.QPushButton('Stop')
             addBtn.clicked.connect(self.stop)
@@ -82,13 +71,11 @@ class Screen(QtGui.QMainWindow):
             self.mainFrame.setLayout(mainLayout)
             self.setCentralWidget(self.mainFrame)
 
-            self.time = 5
+            self.time = 0.0
 
             self.signal.connect(self.addDataToPlot)
 
-        def addDataToPlot(self, toPlot):
-            print("hi")
-            
+        def addDataToPlot(self, toPlot):        
             data = {
                 'x': self.time,
                 'y': toPlot
@@ -96,25 +83,18 @@ class Screen(QtGui.QMainWindow):
             self.x = np.append(self.x, data['x'])
             self.y = np.append(self.y, data['y'])
             self.plot.setData(self.x, self.y)
-            self.time += 1
+            self.time += 0.1
 
         def stop(self):
             app.quit()
             
 
 if __name__ == "__main__":
-    print("started1")
 
-    
-    #def update():
-    #  window.addDataToPlot(200)
-    #   print("hello there")
-
-
-
-
-    app = QtGui.QApplication(sys.argv)
+    app = QtGui.QApplication()
+    pg.setConfigOptions(antialias = True)
     window = Screen()
+    window.setWindowTitle('PID Tuner/Visuaizer')
     window.show()
     t = threading.Thread(target=listener)
     t.start()

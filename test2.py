@@ -45,17 +45,17 @@ class Screen(QtGui.QMainWindow):
         self.time += 1
 
 
+
+
+#def update():
+  #  window.addDataToPlot(200)
+ #   print("hello there")
+
+
+
+
+
 app = QtGui.QApplication(sys.argv)
 window = Screen()
-
-def update():
-    window.addDataToPlot(200)
-    print("hello there")
-
-
-
-
-if __name__ == "__main__":
-    
-    window.show()
-    sys.exit(app.exec_())
+window.show()
+sys.exit(app.exec_())
