@@ -1,7 +1,7 @@
 '''
 Author: Ryan Clode<ryan@theclodes.com>
 Last Modified 1/17/2019
-Description: This module is a PID Tuner/Visualizer.
+Description: This module is a PID Tuner/Visualizer. PV vs. Time.
 '''
 import mechos
 import time
@@ -31,7 +31,6 @@ def listener():
         listener_node.spinOnce(sub)
         time.sleep(0.1)
 
-
 def chatter_callback(chatter_data):
     '''
     Callback function for subscriber to pass data into.
@@ -45,39 +44,46 @@ def chatter_callback(chatter_data):
 
     #Parse data from publisher
     error = float(tokens[0])
-    seconds = int(tokens[1])
+    seconds = float(tokens[1])
     sp = int(tokens[2])
 
     #Pass SetPoint and Error values to PyQt event loop
     window.signalSP.emit(sp)
-    window.signalErr.emit(error)
+    window.signalPV.emit(error)
+
+    window2.signalError.emit(error)
 
 
 class Screen(QtGui.QMainWindow):
     '''
     This Class runs a PyQt GUI event loop. 
-    Simply graphs PV (Process Variable) vs. Time.
+    Simply graphs the data given to it vs. Time.
     '''
 
     #Signals are used to pass data to the event loop from another thread. 
-    signalErr = QtCore.Signal(float)
+    signalPV = QtCore.Signal(float)
     signalSP = QtCore.Signal(int)
+    signalError = QtCore.Signal(float)
 
-    def __init__(self):
+    def __init__(self, name, YaxisLabel):
         '''
         Starts GUI by calling initUI()
 
         Parameters:
-            N/A
+            name: Title of plot
+            YaxisLabel: The label to appear on the Y Axis
         Returns:
             N/A
         '''
+        self.name = name
+        self.YaxisLabel = YaxisLabel
+
         super(Screen, self).__init__()
         self.initUI()
 
     def initUI(self):
         '''
-        Draws the Graph on PyQt window. Connects signals (Err, SP) to their
+        Draws the Graph on PyQt window. Connects signals (PV, Error, SP) to their
         necessary methods.
 
         Parameters:
@@ -88,8 +94,8 @@ class Screen(QtGui.QMainWindow):
         self.x = np.array([])
         self.y = np.array([])
         self.plt = pg.PlotWidget()
-        self.plt.setTitle("Process Variable vs. Time")
-        self.plt.setLabel('left', "PV")
+        self.plt.setTitle(self.name)
+        self.plt.setLabel('left', self.YaxisLabel)
         self.plt.setLabel('bottom', "Time(s)")
         self.plot = self.plt.plot(self.x, self.y)
 
@@ -107,8 +113,9 @@ class Screen(QtGui.QMainWindow):
 
         self.time = 0.0
 
-        self.signalErr.connect(self.addDataToPlot)
+        self.signalPV.connect(self.addPVToPlot)
         self.signalSP.connect(self.addSetPoint)
+        self.signalError.connect(self.addErrorToPlot)
 
         self.sp = 0
 
@@ -126,12 +133,30 @@ class Screen(QtGui.QMainWindow):
             self.sp = sp
             self.plt.addItem(pg.InfiniteLine(pos=sp, angle=0, label='SP'))
 
-    def addDataToPlot(self, toPlot):
+    def addErrorToPlot(self, toPlot): 
         '''
-        Updates the graph with a new data point.
+        Updates the graph with a new Error data point.
 
         Parameters:
-            toPlot: The PV value to be added to the graph. Should be a float.
+            toPlot: The Error value to be added to the graph. Should be a float.
+        Returns:
+            N/A
+        '''         
+        data = {
+            'x': self.time,
+            'y': toPlot
+        }
+        self.x = np.append(self.x, data['x'])
+        self.y = np.append(self.y, data['y'])
+        self.plot.setData(self.x, self.y)
+        self.time += 0.1
+
+    def addPVToPlot(self, toPlot):
+        '''
+        Updates the graph with a new PV data point.
+
+        Parameters:
+            toPlot: The Error value to be added to the graph. Should be a float.
         Returns:
             N/A
         '''        
@@ -160,10 +185,17 @@ if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)
     pg.setConfigOptions(antialias = True)
-    window = Screen()
-    window.setWindowTitle('PID Tuner/Visuaizer')
+
+    #graph #1
+    window = Screen("Process Variable vs. Time", "PV")
+    window.setWindowTitle('PID Tuner/Visualizer')
     window.show()
-    
+
+    #graph #2
+    window2 = Screen("Error vs. Time", "Error")
+    window2.setWindowTitle('PID Tuner/Visualizer')
+    window2.show()
+
     #creates a new thread to allow listener() and PyQt event loop to run 
     #simultaneously
     t = threading.Thread(target=listener)
